@@ -7,6 +7,8 @@ use App\Http\Controllers\RisetController;
 use App\Http\Controllers\DistribusiController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
+// Impor controller baru
+use App\Http\Controllers\PerangkatPwaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +22,6 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-    // Perubahan: Tambahkan route untuk update profil
     Route::put('/user/profile', [AuthController::class, 'updateProfile']);
 
     Route::apiResource('kontak', KontakController::class);
@@ -38,4 +39,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/dashboard/force-restart', [DashboardController::class, 'forceRestart']);
     Route::get('/dashboard/history', [DashboardController::class, 'getHistory']);
+
+    // Grup rute untuk Manajemen Perangkat PWA
+    Route::prefix('perangkat-pwa')->group(function () {
+        // Rute untuk membuat token pendaftaran baru
+        Route::post('/generate-token', [PerangkatPwaController::class, 'generateRegistrationToken']);
+    });
 });
