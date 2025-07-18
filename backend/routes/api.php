@@ -1,48 +1,44 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\KontakController;
-use App\Http\Controllers\RisetController;
-use App\Http\Controllers\DistribusiController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
-// Impor controller baru
-use App\Http\Controllers\PerangkatPwaController;
+use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\BatchController;
+use App\Http\Controllers\ProductLinkController;
+use App\Http\Controllers\PwaController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
-
+// Auth routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
 
-    Route::apiResource('kontak', KontakController::class);
+    // Device management
+    Route::get('/devices', [DeviceController::class, 'index']);
+    Route::post('/devices/generate-token', [DeviceController::class, 'generateToken']);
+    Route::post('/devices', [DeviceController::class, 'register']);
+    Route::delete('/devices/{device}', [DeviceController::class, 'destroy']);
 
-    Route::post('/riset/upload', [RisetController::class, 'processUpload']);
+    // Batch management
+    Route::get('/batches', [BatchController::class, 'index']);
+    Route::post('/batches', [BatchController::class, 'store']);
+    Route::put('/batches/{batch}', [BatchController::class, 'update']);
+    Route::post('/batches/{batch}/send', [BatchController::class, 'sendToPwa']);
+    Route::delete('/batches/{batch}', [BatchController::class, 'destroy']);
 
-    Route::prefix('distribusi')->group(function () {
-        Route::get('/state', [DistribusiController::class, 'getState']);
-        Route::post('/setup-batches', [DistribusiController::class, 'setupBatches']);
-        Route::post('/distribute', [DistribusiController::class, 'distributeLinks']);
-        Route::put('/batch/{batch}', [DistribusiController::class, 'updateBatch']);
-        Route::get('/batch/{batch}/links', [DistribusiController::class, 'getLinksForBatch']);
-        Route::post('/mark-sent', [DistribusiController::class, 'markBatchAsSent']);
-    });
-
-    Route::post('/dashboard/force-restart', [DashboardController::class, 'forceRestart']);
-    Route::get('/dashboard/history', [DashboardController::class, 'getHistory']);
+    // Product links
+    Route::get('/links', [ProductLinkController::class, 'index']);
+    Route::post('/links', [ProductLinkController::class, 'store']);
+    Route::post('/links/upload', [ProductLinkController::class, 'bulkUpload']);
+    Route::delete('/links/{link}', [ProductLinkController::class, 'destroy']);
 });
 
-// Route khusus untuk PWA (tidak perlu auth karena menggunakan device token)
+// PWA routes (no auth required, uses device token)
 Route::prefix('pwa')->group(function () {
-    Route::post('/batches', [DistribusiController::class, 'getBatchesForDevice']);
-
+    Route::post('/batches', [PwaController::class, 'getBatches']);
+    Route::post('/links/update-status', [PwaController::class, 'updateLinkStatus']);
+    Route::post('/batches/complete', [PwaController::class, 'completeBatch']);
 });

@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import apiClient from '../api';
-import LoadingSpinner from '../components/LoadingSpinner';
 
 const AuthContext = createContext(null);
 
@@ -33,7 +32,7 @@ export const AuthProvider = ({ children }) => {
         }
     }, [token]);
 
-    const login = async (credentials) => {
+    const loginUser = async (credentials) => {
         const response = await apiClient.post('/login', credentials);
         const { access_token, user } = response.data;
         localStorage.setItem('token', access_token);
@@ -42,15 +41,15 @@ export const AuthProvider = ({ children }) => {
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
     };
 
-    const register = async (data) => {
+    const registerUser = async (data) => {
         await apiClient.post('/register', data);
     };
 
-    const logout = async () => {
+    const logoutUser = async () => {
         try {
             await apiClient.post('/logout');
         } catch (error) {
-            console.error("Logout failed, possibly due to invalid token on server. Clearing client-side session.", error);
+            console.error("Logout failed:", error);
         } finally {
             localStorage.removeItem('token');
             setToken(null);
@@ -59,23 +58,21 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    // Perubahan: Tambahkan fungsi untuk memperbarui state user secara lokal
-    const updateUser = (updatedUserData) => {
-        setUser(updatedUserData);
-    };
-
     const value = {
         user,
         token,
-        login,
-        register,
-        logout,
-        updateUser, // Perubahan: Ekspor fungsi updateUser
+        login: loginUser,
+        register: registerUser,
+        logout: logoutUser,
         isAuthenticated: !!token,
     };
 
     if (loading) {
-        return <LoadingSpinner />;
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        );
     }
 
     return (
