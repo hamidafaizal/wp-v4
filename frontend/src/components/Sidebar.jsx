@@ -34,10 +34,9 @@ const Sidebar = () => {
   const navItems = [
     { icon: <FaTachometerAlt />, text: 'Dashboard', to: '/dashboard' },
     { icon: <FaMobileAlt />, text: 'Manajemen HP', to: '/manajemen-hp' },
-    // Tambahkan item menu baru di sini
     { icon: <FaServer />, text: 'Manajemen Perangkat', to: '/manajemen-perangkat' },
     { icon: <FaFlask />, text: 'Riset', to: '/riset' },
-    { icon: <FaLink />, text: 'Distribusi Link', to: '/distribusi-link' },
+    { icon: <FaLink />, text: 'Distribusi ke PWA', to: '/distribusi-link' },
   ];
 
   const activeLinkClass = 'bg-blue-500 text-white';

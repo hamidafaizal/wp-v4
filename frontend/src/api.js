@@ -35,13 +35,14 @@ export const setupBatches = (jumlahHp) => apiClient.post('/distribusi/setup-batc
 export const distributeLinks = () => apiClient.post('/distribusi/distribute');
 export const updateBatch = (batchId, data) => apiClient.put(`/distribusi/batch/${batchId}`, data);
 export const getBatchLinks = (batchId) => apiClient.get(`/distribusi/batch/${batchId}/links`);
-export const logSentLinks = (batchId) => apiClient.post('/distribusi/log-sent', { batch_id: batchId });
+export const markBatchAsSent = (batchId) => apiClient.post('/distribusi/mark-sent', { batch_id: batchId });
 
 // --- Dashboard ---
 export const forceRestartSystem = () => apiClient.post('/dashboard/force-restart');
 export const getDashboardHistory = () => apiClient.get('/dashboard/history');
 
-// --- Perangkat PWA ---
+// --- PWA ---
+export const getBatchesForDevice = (deviceToken) => apiClient.post('/pwa/batches', { device_token: deviceToken });
 export const generatePerangkatPwaToken = () => apiClient.post('/perangkat-pwa/generate-token');
 
 

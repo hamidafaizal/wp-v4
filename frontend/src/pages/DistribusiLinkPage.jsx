@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import BatchCard from '../components/BatchCard.jsx';
 import { FaShareAlt, FaSpinner } from 'react-icons/fa';
-import { getDistribusiState, setupBatches, distributeLinks, updateBatch, logSentLinks } from '../api.js';
+import { getDistribusiState, setupBatches, distributeLinks, updateBatch, markBatchAsSent } from '../api.js';
 import LoadingSpinner from '../components/LoadingSpinner.jsx';
 
 const DistribusiLinkPage = () => {
@@ -87,13 +87,13 @@ const DistribusiLinkPage = () => {
   };
   
   // Fungsi untuk mencatat link yang terkirim
-  const handleSendSuccess = async (batchId) => {
+  const handleMarkAsSent = async (batchId) => {
     try {
-      await logSentLinks(batchId);
+      await markBatchAsSent(batchId);
       await fetchState();
     } catch (error) {
-      console.error(`Gagal mencatat link terkirim untuk batch ${batchId}:`, error);
-      alert("Gagal mencatat link terkirim.");
+      console.error(`Gagal menandai batch sebagai terkirim untuk batch ${batchId}:`, error);
+      alert("Gagal menandai batch sebagai terkirim.");
     }
   };
 
@@ -104,8 +104,8 @@ const DistribusiLinkPage = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Distribusi Link</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-300">Atur jumlah HP, bagi link, lalu kirimkan ke kontak Anda.</p>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Distribusi Link ke PWA</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-300">Atur jumlah HP, bagi link, lalu kirimkan ke PWA perangkat Anda.</p>
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 gap-6">
@@ -150,7 +150,7 @@ const DistribusiLinkPage = () => {
             contacts={contacts}
             onAssignContact={handleAssignContact}
             onUpdateKapasitas={handleUpdateKapasitas}
-            onSendSuccess={handleSendSuccess}
+            onMarkAsSent={handleMarkAsSent}
           />
         ))}
       </div>

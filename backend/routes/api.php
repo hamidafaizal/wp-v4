@@ -34,11 +34,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/distribute', [DistribusiController::class, 'distributeLinks']);
         Route::put('/batch/{batch}', [DistribusiController::class, 'updateBatch']);
         Route::get('/batch/{batch}/links', [DistribusiController::class, 'getLinksForBatch']);
-        Route::post('/log-sent', [DistribusiController::class, 'logSentLinks']);
+        Route::post('/mark-sent', [DistribusiController::class, 'markBatchAsSent']);
     });
 
     Route::post('/dashboard/force-restart', [DashboardController::class, 'forceRestart']);
     Route::get('/dashboard/history', [DashboardController::class, 'getHistory']);
+});
 
+// Route khusus untuk PWA (tidak perlu auth karena menggunakan device token)
+Route::prefix('pwa')->group(function () {
+    Route::post('/batches', [DistribusiController::class, 'getBatchesForDevice']);
 
 });

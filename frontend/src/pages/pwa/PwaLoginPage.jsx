@@ -80,7 +80,7 @@ const PwaLoginPage = () => {
 
                     <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg w-full">
                         <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">
-                            Login PWA
+                            Login PWA Device
                         </h2>
                         
                         <div className="mb-4">
@@ -90,10 +90,13 @@ const PwaLoginPage = () => {
                                 id="nama-hp"
                                 value={namaHp}
                                 onChange={(e) => setNamaHp(e.target.value)}
-                                placeholder="Masukkan nama HP"
+                                placeholder="Masukkan nama HP/Device"
                                 className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 required
                             />
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Nama ini harus sesuai dengan kontak yang terdaftar di sistem
+                            </p>
                         </div>
 
                         <div className="flex gap-4 mb-6">

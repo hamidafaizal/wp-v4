@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { FaWhatsapp, FaUser, FaLink, FaSpinner, FaBox } from 'react-icons/fa';
+import { FaUser, FaLink, FaSpinner, FaBox, FaMobileAlt } from 'react-icons/fa';
 import { getBatchLinks } from '../api.js';
 
-const BatchCard = ({ batch, contacts, onAssignContact, onUpdateKapasitas, onSendSuccess }) => {
-  const [isSending, setIsSending] = useState(false);
+const BatchCard = ({ batch, contacts, onAssignContact, onUpdateKapasitas, onMarkAsSent }) => {
+  const [isProcessing, setIsProcessing] = useState(false);
   const [kapasitas, setKapasitas] = useState(batch.kapasitas);
   
   const assignedContact = batch.assigned_contact;
@@ -26,44 +26,34 @@ const BatchCard = ({ batch, contacts, onAssignContact, onUpdateKapasitas, onSend
     }
   };
 
-  const handleSend = async () => {
+  const handleSendToPWA = async () => {
     if (!assignedContact) {
       alert('Silakan tugaskan kontak ke batch ini terlebih dahulu.');
       return;
     }
 
-    setIsSending(true);
+    setIsProcessing(true);
     try {
-      // 1. Ambil daftar link dari API
       const response = await getBatchLinks(batch.id);
-      const links = response.data;
+      const { links } = response.data;
 
       if (links.length === 0) {
         alert('Tidak ada link di dalam batch ini untuk dikirim.');
-        setIsSending(false);
+        setIsProcessing(false);
         return;
       }
 
-      // 2. Format nomor HP
-      let formattedNumber = assignedContact.nomor_hp;
-      if (formattedNumber.startsWith('0')) {
-        formattedNumber = '62' + formattedNumber.substring(1);
-      }
-
-      // 3. Susun pesan
-      const message = `Halo ${assignedContact.nama}, berikut adalah link produk untuk Anda:\n\n${links.map(l => l.product_link).join('\n')}`;
-      const whatsappUrl = `https://web.whatsapp.com/send?phone=${formattedNumber}&text=${encodeURIComponent(message)}`;
+      // Simulasi pengiriman ke PWA - dalam implementasi nyata ini akan mengirim notifikasi ke PWA
+      alert(`Batch berhasil dikirim ke PWA ${assignedContact.nama}!\n\nJumlah link: ${links.length}\n\nPWA akan menerima notifikasi untuk memproses batch ini.`);
       
-      window.open(whatsappUrl, '_blank');
-      
-      // 4. Panggil fungsi untuk mencatat link terkirim di backend
-      await onSendSuccess(batch.id);
+      // Tandai batch sebagai terkirim
+      await onMarkAsSent(batch.id);
 
     } catch (error) {
-      console.error("Gagal mengambil link atau mengirim:", error);
-      alert("Terjadi kesalahan saat menyiapkan pesan WhatsApp.");
+      console.error("Gagal mengirim batch ke PWA:", error);
+      alert("Terjadi kesalahan saat mengirim batch ke PWA.");
     } finally {
-      setIsSending(false);
+      setIsProcessing(false);
     }
   };
 
@@ -117,12 +107,12 @@ const BatchCard = ({ batch, contacts, onAssignContact, onUpdateKapasitas, onSend
       </div>
       <div className="mt-4">
         <button
-          onClick={handleSend}
-          disabled={!assignedContact || batch.links_count === 0 || isSending}
-          className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          onClick={handleSendToPWA}
+          disabled={!assignedContact || batch.links_count === 0 || isProcessing}
+          className="w-full flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {isSending ? <FaSpinner className="animate-spin mr-2" /> : <FaWhatsapp className="mr-2" />}
-          {isSending ? 'Memproses...' : 'Kirim via WA'}
+          {isProcessing ? <FaSpinner className="animate-spin mr-2" /> : <FaMobileAlt className="mr-2" />}
+          {isProcessing ? 'Memproses...' : 'Kirim ke PWA'}
         </button>
       </div>
     </div>

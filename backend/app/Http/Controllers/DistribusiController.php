@@ -9,7 +9,6 @@ use App\Models\Kontak;
 use App\Models\CacheLink;
 use App\Models\RiwayatPengiriman;
 use Illuminate\Support\Facades\DB;
-// Perubahan: Mengimpor Auth facade untuk mendapatkan data pengguna yang login.
 use Illuminate\Support\Facades\Auth;
 
 class DistribusiController extends Controller
@@ -19,10 +18,8 @@ class DistribusiController extends Controller
      */
     public function getState()
     {
-        // Dapatkan user yang sedang login
         $user = Auth::user();
 
-        // Perubahan: Ambil data yang hanya dimiliki oleh user ini
         $linksInGudangCount = Gudang::where('user_id', $user->id)->whereNull('batch_config_id')->count();
         
         $batches = BatchConfig::where('user_id', $user->id)
@@ -47,35 +44,28 @@ class DistribusiController extends Controller
     {
         $request->validate(['jumlah_hp' => 'required|integer|min:0']);
         $newCount = $request->input('jumlah_hp');
-        // Dapatkan user yang sedang login
         $user = Auth::user();
 
         DB::transaction(function () use ($newCount, $user) {
-            // Perubahan: Ambil batch milik user saat ini
             $currentBatches = BatchConfig::where('user_id', $user->id)->orderBy('id', 'asc')->get();
             $currentCount = $currentBatches->count();
 
             if ($newCount > $currentCount) {
-                // Jika jumlah baru lebih besar, tambahkan batch baru
                 for ($i = $currentCount + 1; $i <= $newCount; $i++) {
                     BatchConfig::create([
-                        // Perubahan: Tambahkan user_id saat membuat batch baru
                         'user_id' => $user->id,
                         'nama' => 'Batch #' . $i,
                         'kapasitas' => 100,
                     ]);
                 }
             } elseif ($newCount < $currentCount) {
-                // Jika jumlah baru lebih kecil, hapus batch dari belakang
                 $batchesToDelete = $currentBatches->slice($newCount);
                 $batchIdsToDelete = $batchesToDelete->pluck('id');
 
-                // Perubahan: Kembalikan link dari batch yang akan dihapus ke gudang (hanya milik user ini)
                 Gudang::where('user_id', $user->id)
                       ->whereIn('batch_config_id', $batchIdsToDelete)
                       ->update(['batch_config_id' => null]);
 
-                // Perubahan: Hapus batch (sudah otomatis terfilter karena $batchesToDelete milik user)
                 BatchConfig::whereIn('id', $batchIdsToDelete)->delete();
             }
         });
@@ -91,7 +81,6 @@ class DistribusiController extends Controller
         $user = Auth::user();
 
         DB::transaction(function () use ($user) {
-            // Perubahan: Ambil link dan batch yang hanya dimiliki oleh user ini
             $availableLinks = Gudang::where('user_id', $user->id)->whereNull('batch_config_id')->get();
             $batches = BatchConfig::where('user_id', $user->id)->withCount('links as current_links_count')->orderBy('id', 'asc')->get();
 
@@ -109,7 +98,6 @@ class DistribusiController extends Controller
                 }
 
                 $linkIds = $linksToAssign->pluck('id');
-                // Perubahan: Update link yang dimiliki user
                 Gudang::where('user_id', $user->id)->whereIn('id', $linkIds)->update(['batch_config_id' => $batch->id]);
 
                 $linkIndex += $linksToAssign->count();
@@ -124,13 +112,11 @@ class DistribusiController extends Controller
      */
     public function updateBatch(Request $request, BatchConfig $batch)
     {
-        // Perubahan: Otorisasi untuk memastikan batch ini milik user yang sedang login
         if ($batch->user_id !== Auth::id()) {
             return response()->json(['message' => 'Tidak diizinkan'], 403);
         }
 
         $validated = $request->validate([
-            // Perubahan: Pastikan kontak_id yang dikirim juga milik user ini
             'kontak_id' => 'nullable|exists:kontaks,id,user_id,' . Auth::id(),
             'kapasitas' => 'sometimes|required|integer|min:1',
         ]);
@@ -141,31 +127,35 @@ class DistribusiController extends Controller
     }
 
     /**
-     * Mengambil semua link yang ada di dalam batch tertentu.
+     * Mengambil semua link yang ada di dalam batch tertentu untuk PWA.
      */
     public function getLinksForBatch(BatchConfig $batch)
     {
-        // Perubahan: Otorisasi untuk memastikan batch ini milik user yang sedang login
         if ($batch->user_id !== Auth::id()) {
             return response()->json(['message' => 'Tidak diizinkan'], 403);
         }
-        return response()->json($batch->links()->get());
+        
+        $links = $batch->links()->get();
+        
+        return response()->json([
+            'batch' => $batch->load('assignedContact'),
+            'links' => $links
+        ]);
     }
     
     /**
      * Mencatat link yang sudah terkirim ke cache dan membuat riwayat.
+     * Sekarang digunakan oleh PWA untuk menandai batch sebagai selesai.
      */
-    public function logSentLinks(Request $request)
+    public function markBatchAsSent(Request $request)
     {
         $user = Auth::user();
         $request->validate([
-            // Perubahan: Pastikan batch_id ada dan milik user
             'batch_id' => 'required|exists:batch_configs,id,user_id,' . $user->id,
         ]);
         $batchId = $request->input('batch_id');
 
         DB::transaction(function () use ($batchId, $user) {
-            // Perubahan: Ambil batch dan link milik user
             $batch = BatchConfig::where('user_id', $user->id)->find($batchId);
             $sentLinks = Gudang::where('user_id', $user->id)->where('batch_config_id', $batchId)->get();
 
@@ -173,7 +163,6 @@ class DistribusiController extends Controller
                 return;
             }
 
-            // Perubahan: Buat catatan di riwayat pengiriman dengan user_id
             RiwayatPengiriman::create([
                 'user_id' => $user->id,
                 'kontak_id' => $batch->kontak_id,
@@ -181,7 +170,6 @@ class DistribusiController extends Controller
                 'jumlah_link' => $sentLinks->count(),
             ]);
 
-            // Perubahan: Pindahkan ke cache dengan user_id
             $linksToCache = $sentLinks->map(function ($link) use ($user) {
                 return [
                     'user_id' => $user->id,
@@ -192,10 +180,37 @@ class DistribusiController extends Controller
             })->all();
             CacheLink::insert($linksToCache);
 
-            // Perubahan: Hapus dari gudang (hanya milik user ini)
             Gudang::where('user_id', $user->id)->whereIn('id', $sentLinks->pluck('id'))->delete();
         });
 
-        return response()->json(['message' => 'Link terkirim berhasil dicatat.']);
+        return response()->json(['message' => 'Batch berhasil ditandai sebagai terkirim.']);
+    }
+
+    /**
+     * Endpoint baru untuk PWA mendapatkan data batch yang ditugaskan ke kontak tertentu
+     */
+    public function getBatchesForDevice(Request $request)
+    {
+        $request->validate([
+            'device_token' => 'required|string'
+        ]);
+
+        // Untuk sementara, kita akan menggunakan device_token sebagai nama HP
+        // Di implementasi nyata, ini harus divalidasi dengan sistem token yang proper
+        $deviceName = $request->input('device_token');
+        
+        // Cari kontak berdasarkan nama (untuk demo)
+        $contact = Kontak::where('nama', 'like', '%' . $deviceName . '%')->first();
+        
+        if (!$contact) {
+            return response()->json(['batches' => []]);
+        }
+
+        $batches = BatchConfig::where('user_id', $contact->user_id)
+            ->where('kontak_id', $contact->id)
+            ->with(['links', 'assignedContact'])
+            ->get();
+
+        return response()->json(['batches' => $batches]);
     }
 }
