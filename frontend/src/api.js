@@ -13,7 +13,6 @@ export const registerUser = (data) => apiClient.post('/register', data);
 export const loginUser = (credentials) => apiClient.post('/login', credentials);
 export const logoutUser = () => apiClient.post('/logout');
 export const getUser = () => apiClient.get('/user');
-// Perubahan: Tambahkan fungsi untuk update profil
 export const updateUserProfile = (data) => apiClient.put('/user/profile', data);
 
 
@@ -41,5 +40,9 @@ export const logSentLinks = (batchId) => apiClient.post('/distribusi/log-sent', 
 // --- Dashboard ---
 export const forceRestartSystem = () => apiClient.post('/dashboard/force-restart');
 export const getDashboardHistory = () => apiClient.get('/dashboard/history');
+
+// --- Perangkat PWA ---
+export const generatePerangkatPwaToken = () => apiClient.post('/perangkat-pwa/generate-token');
+
 
 export default apiClient;

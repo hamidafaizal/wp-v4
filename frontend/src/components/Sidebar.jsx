@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext'; // Import useAuth
+import { useAuth } from '../contexts/AuthContext';
 import { 
   FaTachometerAlt, 
   FaMobileAlt, 
@@ -12,7 +12,8 @@ import {
   FaFlask,
   FaLink,
   FaIdCard,
-  FaSyncAlt
+  FaSyncAlt,
+  FaServer // Impor ikon baru
 } from 'react-icons/fa';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import { forceRestartSystem } from '../api.js';
@@ -22,7 +23,7 @@ const Sidebar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isRestartConfirmOpen, setIsRestartConfirmOpen] = useState(false);
-  const { user, logout } = useAuth(); // Dapatkan user dan fungsi logout
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -33,6 +34,8 @@ const Sidebar = () => {
   const navItems = [
     { icon: <FaTachometerAlt />, text: 'Dashboard', to: '/dashboard' },
     { icon: <FaMobileAlt />, text: 'Manajemen HP', to: '/manajemen-hp' },
+    // Tambahkan item menu baru di sini
+    { icon: <FaServer />, text: 'Manajemen Perangkat', to: '/manajemen-perangkat' },
     { icon: <FaFlask />, text: 'Riset', to: '/riset' },
     { icon: <FaLink />, text: 'Distribusi Link', to: '/distribusi-link' },
   ];
