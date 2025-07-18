@@ -40,9 +40,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/dashboard/force-restart', [DashboardController::class, 'forceRestart']);
     Route::get('/dashboard/history', [DashboardController::class, 'getHistory']);
 
-    // Grup rute untuk Manajemen Perangkat PWA
-    Route::prefix('perangkat-pwa')->group(function () {
-        // Rute untuk membuat token pendaftaran baru
-        Route::post('/generate-token', [PerangkatPwaController::class, 'generateRegistrationToken']);
-    });
+
 });
